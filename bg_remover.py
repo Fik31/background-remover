@@ -2,7 +2,7 @@ import io
 import zipfile
 from pathlib import Path
 import streamlit as st
-from PIL import Image, ImageEnhance, ImageDraw, ImageFont
+from PIL import Image, ImageEnhance, ImageDraw
 from rembg import remove
 import uuid
 import concurrent.futures
@@ -209,7 +209,7 @@ def apply_background_color(image, background_color):
 def add_watermark(image, text, position):
     """Adds watermark text to the image."""
     draw = ImageDraw.Draw(image)
-    font = ImageFont.load_default()  # Using default font
+    font = st.image_config.font  # Get Streamlit's default font
     text_width, text_height = draw.textsize(text, font=font)
     margin = 10  # Margin from image edges
     if position == "Kiri Bawah":
@@ -218,7 +218,7 @@ def add_watermark(image, text, position):
     else:  # Kanan Bawah
         x = image.width - text_width - margin
         y = image.height - text_height - margin
-    draw.text((x, y), text, font=font, fill=(255, 255, 255, 128))  # Adjust fill color and opacity
+    draw.text((x, y), text, fill=(255, 255, 255, 128), font=font)  # Adjust fill color and opacity
     return image
 
 
