@@ -2,7 +2,7 @@ import io
 import zipfile
 from pathlib import Path
 import streamlit as st
-from PIL import Image, ImageEnhance, ImageFilter, ImageOps
+from PIL import Image, ImageEnhance, ImageFilter, ImageOps, ImageDraw, ImageFont
 from rembg import remove
 import uuid
 import concurrent.futures
@@ -67,9 +67,23 @@ def display_ui():
 
     size_ratio = st.sidebar.selectbox(
         "Rasio Ukuran",
-        options=[(4, 3), (16, 9), (3, 2), (2, 3)],  # Rasio umum ukuran
+        options=[
+            (4, 3),
+            (16, 9),
+            (3, 2),
+            (2, 3),
+            (3, 4),
+            (9, 16),
+            (2, 1),
+            (1, 2),
+        ],  # Rasio umum ukuran
         format_func=lambda ratio: f"{ratio[0]}:{ratio[1]}",
         index=0,  # Indeks default
+    )
+
+    watermark_text = st.sidebar.text_input("Teks Watermark", "Your Watermark Here")
+    watermark_position = st.sidebar.radio(
+        "Posisi Watermark", ("Kiri Bawah", "Kanan Bawah")
     )
 
     display_footer()
@@ -81,6 +95,8 @@ def display_ui():
         enhancement,
         quality,
         size_ratio,
+        watermark_text,
+        watermark_position,
     )
 
 
@@ -100,6 +116,8 @@ def process_and_display_images(
     enhancement,
     quality,
     size_ratio,
+    watermark_text,
+    watermark_position,
 ):
     """Processes the uploaded files and displays the original and result images."""
     if not uploaded_files:
@@ -125,6 +143,8 @@ def process_and_display_images(
                     enhancement,
                     quality,
                     size_ratio,
+                    watermark_text,
+                    watermark_position,
                 ): file
                 for file in uploaded_files
             }
@@ -146,6 +166,8 @@ def process_image(
     enhancement,
     quality,
     size_ratio,
+    watermark_text,
+    watermark_position,
 ):
     """Processes a single image."""
     original_image = Image.open(file).convert("RGBA")
@@ -158,6 +180,7 @@ def process_image(
     )  # Resize to specified size ratio
     if add_background_color:
         result_image = apply_background_color(result_image, background_color)
+    result_image = add_watermark(result_image, watermark_text, watermark_position)
     return original_image, result_image, file.name
 
 
@@ -181,6 +204,22 @@ def apply_background_color(image, background_color):
     background = Image.new("RGBA", image.size, background_color)
     composite_image = Image.alpha_composite(background, image)
     return composite_image
+
+
+def add_watermark(image, text, position):
+    """Adds watermark text to the image."""
+    draw = ImageDraw.Draw(image)
+    font = ImageFont.truetype("arial.ttf", 40)  # You can adjust the font and size here
+    text_width, text_height = draw.textsize(text, font)
+    margin = 10  # Margin from image edges
+    if position == "Kiri Bawah":
+        x = margin
+        y = image.height - text_height - margin
+    else:  # Kanan Bawah
+        x = image.width - text_width - margin
+        y = image.height - text_height - margin
+    draw.text((x, y), text, font=font, fill=(255, 255, 255, 128))  # Adjust fill color and opacity
+    return image
 
 
 def calculate_new_size(width, height, size_ratio):
@@ -218,6 +257,8 @@ def main():
         enhancement,
         quality,
         size_ratio,
+        watermark_text,
+        watermark_position,
     ) = display_ui()
     process_and_display_images(
         uploaded_files,
@@ -227,6 +268,8 @@ def main():
         enhancement,
         quality,
         size_ratio,
+        watermark_text,
+        watermark_position,
     )
 
 
