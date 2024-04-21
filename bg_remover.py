@@ -2,7 +2,7 @@ import io
 import zipfile
 from pathlib import Path
 import streamlit as st
-from PIL import Image, ImageEnhance, ImageFilter
+from PIL import Image, ImageEnhance, ImageFilter, ImageOps
 from rembg import remove
 import uuid
 import concurrent.futures
@@ -44,19 +44,23 @@ def display_ui():
         key=st.session_state.get("uploader_key", "file_uploader"),
     )
 
+    background_color = st.sidebar.color_picker(
+        "Choose background color", "#FFFFFF"  # Default color is white
+    )
+
     display_footer()
-    return uploaded_files
+    return uploaded_files, background_color
 
 
 def display_footer():
     """Displays a custom footer."""
     footer = """<div style="position: fixed; bottom: 0; left: 20px;">
-                <p>Developed with 15.4B.07</p>
+                <p>Developed with ❤ by <a href="https://github.com/balewgize" target="_blank">@balewgize</a></p>
                 </div>"""
     st.sidebar.markdown(footer, unsafe_allow_html=True)
 
 
-def process_and_display_images(uploaded_files):
+def process_and_display_images(uploaded_files, background_color):
     """Processes the uploaded files and displays the original and result images."""
     if not uploaded_files:
         st.warning("Please upload an image.")
@@ -71,7 +75,10 @@ def process_and_display_images(uploaded_files):
 
     with st.spinner("Removing backgrounds..."):
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = {executor.submit(process_image, file): file for file in uploaded_files}
+            futures = {
+                executor.submit(process_image, file, background_color): file
+                for file in uploaded_files
+            }
             for future in concurrent.futures.as_completed(futures):
                 original, result, name = future.result()
                 col1, col2 = st.columns(2)
@@ -82,13 +89,14 @@ def process_and_display_images(uploaded_files):
                 download_result(result, name)
 
 
-def process_image(file):
+def process_image(file, background_color):
     """Processes a single image."""
     original_image = Image.open(file).convert("RGBA")
     original_width, original_height = original_image.size
     result_image = remove_background(file.getvalue())
     result_image = enhance_image(result_image)
     result_image = result_image.resize((original_width, original_height), Image.LANCZOS)  # Upscale to original size
+    result_image = apply_background_color(result_image, background_color)
     return original_image, result_image, file.name
 
 
@@ -104,6 +112,13 @@ def enhance_image(image):
     image = enhancer.enhance(ENHANCE_FACTOR)  # Increase contrast
     image = image.filter(ImageFilter.SMOOTH)  # Apply smoothing filter
     return image
+
+
+def apply_background_color(image, background_color):
+    """Applies the selected background color to the image."""
+    background = Image.new("RGBA", image.size, background_color)
+    composite_image = Image.alpha_composite(background, image)
+    return composite_image
 
 
 def img_to_bytes(img):
@@ -126,8 +141,8 @@ def download_result(image, name):
 def main():
     setup_page()
     initialize_session()
-    uploaded_files = display_ui()
-    process_and_display_images(uploaded_files)
+    uploaded_files, background_color = display_ui()
+    process_and_display_images(uploaded_files, background_color)
 
 
 if __name__ == "__main__":
