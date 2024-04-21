@@ -9,8 +9,10 @@ import concurrent.futures
 
 MAX_FILES = 5
 ALLOWED_TYPES = ["png", "jpg", "jpeg"]
-ENHANCE_FACTOR = 1.5  # Adjust as needed
-IMAGE_QUALITY = 95  # Adjust as needed
+DEFAULT_BRIGHTNESS = 1.0
+DEFAULT_ENHANCEMENT = 1.0
+DEFAULT_QUALITY = 95
+DEFAULT_SIZE_RATIO = (4, 3)  # Default size ratio (width:height)
 
 
 def setup_page():
@@ -34,7 +36,7 @@ def initialize_session():
 
 
 def display_ui():
-    """Displays the user interface for file upload and returns uploaded files and background color selection."""
+    """Displays the user interface for file upload and returns uploaded files and settings."""
     st.sidebar.markdown("## Image Background Remover")
 
     uploaded_files = st.sidebar.file_uploader(
@@ -51,8 +53,35 @@ def display_ui():
             "Choose background color", "#FFFFFF"  # Default color is white
         )
 
+    brightness = st.sidebar.slider(
+        "Brightness", min_value=0.1, max_value=2.0, value=DEFAULT_BRIGHTNESS, step=0.1
+    )
+
+    enhancement = st.sidebar.slider(
+        "Enhancement", min_value=0.1, max_value=2.0, value=DEFAULT_ENHANCEMENT, step=0.1
+    )
+
+    quality = st.sidebar.slider(
+        "Image Quality (%)", min_value=1, max_value=100, value=DEFAULT_QUALITY
+    )
+
+    size_ratio = st.sidebar.selectbox(
+        "Size Ratio",
+        options=[(4, 3), (16, 9), (3, 2), (2, 3)],  # Common size ratios
+        format_func=lambda ratio: f"{ratio[0]}:{ratio[1]}",
+        index=0,  # Default index
+    )
+
     display_footer()
-    return uploaded_files, add_background_color, background_color
+    return (
+        uploaded_files,
+        add_background_color,
+        background_color,
+        brightness,
+        enhancement,
+        quality,
+        size_ratio,
+    )
 
 
 def display_footer():
@@ -63,7 +92,15 @@ def display_footer():
     st.sidebar.markdown(footer, unsafe_allow_html=True)
 
 
-def process_and_display_images(uploaded_files, add_background_color, background_color):
+def process_and_display_images(
+    uploaded_files,
+    add_background_color,
+    background_color,
+    brightness,
+    enhancement,
+    quality,
+    size_ratio,
+):
     """Processes the uploaded files and displays the original and result images."""
     if not uploaded_files:
         st.warning("Please upload an image.")
@@ -84,6 +121,10 @@ def process_and_display_images(uploaded_files, add_background_color, background_
                     file,
                     add_background_color,
                     background_color,
+                    brightness,
+                    enhancement,
+                    quality,
+                    size_ratio,
                 ): file
                 for file in uploaded_files
             }
@@ -97,13 +138,24 @@ def process_and_display_images(uploaded_files, add_background_color, background_
                 download_result(result, name)
 
 
-def process_image(file, add_background_color, background_color):
+def process_image(
+    file,
+    add_background_color,
+    background_color,
+    brightness,
+    enhancement,
+    quality,
+    size_ratio,
+):
     """Processes a single image."""
     original_image = Image.open(file).convert("RGBA")
     original_width, original_height = original_image.size
     result_image = remove_background(file.getvalue())
-    result_image = enhance_image(result_image)
-    result_image = result_image.resize((original_width, original_height), Image.LANCZOS)  # Upscale to original size
+    result_image = enhance_image(result_image, brightness, enhancement)
+    result_image = result_image.resize(
+        calculate_new_size(original_width, original_height, size_ratio),
+        Image.LANCZOS,
+    )  # Resize to specified size ratio
     if add_background_color:
         result_image = apply_background_color(result_image, background_color)
     return original_image, result_image, file.name
@@ -115,11 +167,12 @@ def remove_background(image_bytes):
     return Image.open(io.BytesIO(result)).convert("RGBA")
 
 
-def enhance_image(image):
+def enhance_image(image, brightness, enhancement):
     """Enhances the image for better quality."""
+    enhancer = ImageEnhance.Brightness(image)
+    image = enhancer.enhance(brightness)  # Adjust brightness
     enhancer = ImageEnhance.Contrast(image)
-    image = enhancer.enhance(ENHANCE_FACTOR)  # Increase contrast
-    image = image.filter(ImageFilter.SMOOTH)  # Apply smoothing filter
+    image = enhancer.enhance(enhancement)  # Adjust contrast
     return image
 
 
@@ -130,10 +183,17 @@ def apply_background_color(image, background_color):
     return composite_image
 
 
+def calculate_new_size(width, height, size_ratio):
+    """Calculates the new size based on the specified size ratio."""
+    ratio_width, ratio_height = size_ratio
+    new_width = int((height / ratio_height) * ratio_width)
+    return new_width, height
+
+
 def img_to_bytes(img):
     """Converts an Image object to bytes."""
     buf = io.BytesIO()
-    img.save(buf, format="PNG", quality=IMAGE_QUALITY)
+    img.save(buf, format="PNG", quality=DEFAULT_QUALITY)
     return buf.getvalue()
 
 
@@ -150,8 +210,24 @@ def download_result(image, name):
 def main():
     setup_page()
     initialize_session()
-    uploaded_files, add_background_color, background_color = display_ui()
-    process_and_display_images(uploaded_files, add_background_color, background_color)
+    (
+        uploaded_files,
+        add_background_color,
+        background_color,
+        brightness,
+        enhancement,
+        quality,
+        size_ratio,
+    ) = display_ui()
+    process_and_display_images(
+        uploaded_files,
+        add_background_color,
+        background_color,
+        brightness,
+        enhancement,
+        quality,
+        size_ratio,
+    )
 
 
 if __name__ == "__main__":
