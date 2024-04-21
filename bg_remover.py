@@ -2,7 +2,8 @@ import io
 import zipfile
 from pathlib import Path
 import streamlit as st
-from PIL import Image, ImageEnhance, ImageDraw
+from PIL import Image, ImageEnhance, ImageDraw, ImageFont
+import toml
 from rembg import remove
 import uuid
 import concurrent.futures
@@ -210,21 +211,28 @@ def apply_background_color(image, background_color):
 def add_watermark(image, text, position):
     """Adds watermark text to the image."""
     draw = ImageDraw.Draw(image)
+    
+    # Load Streamlit configuration from TOML file
+    with open("streamlit_config.toml", "r") as f:
+        config = toml.load(f)
+    
+    font_family = config["theme"].get("font", "sans-serif")
+    
     font_size = 40  # Font size for the watermark text
-    if platform.system() == "Windows":
-        font = ImageFont.load_default()
-    else:
-        # On Unix-like systems, Arial is usually available
-        font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-        font = ImageFont.truetype(font_path, font_size)
+    
+    # Create font object using the specified font family
+    font = ImageFont.truetype(font_family, font_size)
+    
     text_width, text_height = draw.textsize(text, font=font)
     margin = 10  # Margin from image edges
+    
     if position == "Kiri Bawah":
         x = margin
         y = image.height - text_height - margin
     else:  # Kanan Bawah
         x = image.width - text_width - margin
         y = image.height - text_height - margin
+    
     draw.text((x, y), text, fill=(255, 255, 255, 128), font=font)  # Adjust fill color and opacity
     return image
 
@@ -282,3 +290,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
