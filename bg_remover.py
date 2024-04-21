@@ -34,7 +34,7 @@ def initialize_session():
 
 
 def display_ui():
-    """Displays the user interface for file upload and returns uploaded files."""
+    """Displays the user interface for file upload and returns uploaded files and background color selection."""
     st.sidebar.markdown("## Image Background Remover")
 
     uploaded_files = st.sidebar.file_uploader(
@@ -44,12 +44,15 @@ def display_ui():
         key=st.session_state.get("uploader_key", "file_uploader"),
     )
 
-    background_color = st.sidebar.color_picker(
-        "Choose background color", "#FFFFFF"  # Default color is white
-    )
+    add_background_color = st.sidebar.checkbox("Add Background Color", value=True)
+    background_color = None
+    if add_background_color:
+        background_color = st.sidebar.color_picker(
+            "Choose background color", "#FFFFFF"  # Default color is white
+        )
 
     display_footer()
-    return uploaded_files, background_color
+    return uploaded_files, add_background_color, background_color
 
 
 def display_footer():
@@ -60,7 +63,7 @@ def display_footer():
     st.sidebar.markdown(footer, unsafe_allow_html=True)
 
 
-def process_and_display_images(uploaded_files, background_color):
+def process_and_display_images(uploaded_files, add_background_color, background_color):
     """Processes the uploaded files and displays the original and result images."""
     if not uploaded_files:
         st.warning("Please upload an image.")
@@ -76,7 +79,12 @@ def process_and_display_images(uploaded_files, background_color):
     with st.spinner("Removing backgrounds..."):
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = {
-                executor.submit(process_image, file, background_color): file
+                executor.submit(
+                    process_image,
+                    file,
+                    add_background_color,
+                    background_color,
+                ): file
                 for file in uploaded_files
             }
             for future in concurrent.futures.as_completed(futures):
@@ -89,14 +97,15 @@ def process_and_display_images(uploaded_files, background_color):
                 download_result(result, name)
 
 
-def process_image(file, background_color):
+def process_image(file, add_background_color, background_color):
     """Processes a single image."""
     original_image = Image.open(file).convert("RGBA")
     original_width, original_height = original_image.size
     result_image = remove_background(file.getvalue())
     result_image = enhance_image(result_image)
     result_image = result_image.resize((original_width, original_height), Image.LANCZOS)  # Upscale to original size
-    result_image = apply_background_color(result_image, background_color)
+    if add_background_color:
+        result_image = apply_background_color(result_image, background_color)
     return original_image, result_image, file.name
 
 
@@ -141,8 +150,8 @@ def download_result(image, name):
 def main():
     setup_page()
     initialize_session()
-    uploaded_files, background_color = display_ui()
-    process_and_display_images(uploaded_files, background_color)
+    uploaded_files, add_background_color, background_color = display_ui()
+    process_and_display_images(uploaded_files, add_background_color, background_color)
 
 
 if __name__ == "__main__":
