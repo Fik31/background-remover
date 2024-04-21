@@ -37,39 +37,39 @@ def initialize_session():
 
 def display_ui():
     """Displays the user interface for file upload and returns uploaded files and settings."""
-    st.sidebar.markdown("## Image Background Remover")
+    st.sidebar.markdown("## Penghapus Latar Belakang Gambar")
 
     uploaded_files = st.sidebar.file_uploader(
-        "Choose images",
+        "Pilih gambar",
         type=ALLOWED_TYPES,
         accept_multiple_files=True,
         key=st.session_state.get("uploader_key", "file_uploader"),
     )
 
-    add_background_color = st.sidebar.checkbox("Add Background Color", value=True)
+    add_background_color = st.sidebar.checkbox("Tambahkan Warna Latar Belakang", value=True)
     background_color = None
     if add_background_color:
         background_color = st.sidebar.color_picker(
-            "Choose background color", "#FFFFFF"  # Default color is white
+            "Pilih warna latar belakang", "#FFFFFF"  # Warna default adalah putih
         )
 
     brightness = st.sidebar.slider(
-        "Brightness", min_value=0.1, max_value=2.0, value=DEFAULT_BRIGHTNESS, step=0.1
+        "Kecerahan", min_value=0.1, max_value=2.0, value=DEFAULT_BRIGHTNESS, step=0.1
     )
 
     enhancement = st.sidebar.slider(
-        "Enhancement", min_value=0.1, max_value=2.0, value=DEFAULT_ENHANCEMENT, step=0.1
+        "Peningkatan", min_value=0.1, max_value=2.0, value=DEFAULT_ENHANCEMENT, step=0.1
     )
 
     quality = st.sidebar.slider(
-        "Image Quality (%)", min_value=1, max_value=100, value=DEFAULT_QUALITY
+        "Kualitas Gambar (%)", min_value=1, max_value=100, value=DEFAULT_QUALITY
     )
 
     size_ratio = st.sidebar.selectbox(
-        "Size Ratio",
-        options=[(4, 3), (16, 9), (3, 2), (2, 3)],  # Common size ratios
+        "Rasio Ukuran",
+        options=[(4, 3), (16, 9), (3, 2), (2, 3)],  # Rasio umum ukuran
         format_func=lambda ratio: f"{ratio[0]}:{ratio[1]}",
-        index=0,  # Default index
+        index=0,  # Indeks default
     )
 
     display_footer()
@@ -87,7 +87,7 @@ def display_ui():
 def display_footer():
     """Displays a custom footer."""
     footer = """<div style="position: fixed; bottom: 0; left: 20px;">
-                <p>Developed with ❤ by <a href="https://github.com/balewgize" target="_blank">@balewgize</a></p>
+                <p>Dikembangkan dengan ❤ oleh <a href="https://github.com/balewgize" target="_blank">@balewgize</a></p>
                 </div>"""
     st.sidebar.markdown(footer, unsafe_allow_html=True)
 
@@ -103,17 +103,17 @@ def process_and_display_images(
 ):
     """Processes the uploaded files and displays the original and result images."""
     if not uploaded_files:
-        st.warning("Please upload an image.")
+        st.warning("Silakan unggah gambar.")
         return
 
-    if not st.sidebar.button("Remove Background"):
+    if not st.sidebar.button("Hapus Latar Belakang"):
         return
 
     if len(uploaded_files) > MAX_FILES:
-        st.warning(f"Maximum {MAX_FILES} files will be processed.")
+        st.warning(f"Maksimal {MAX_FILES} gambar akan diproses.")
         uploaded_files = uploaded_files[:MAX_FILES]
 
-    with st.spinner("Removing backgrounds..."):
+    with st.spinner("Menghapus latar belakang..."):
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = {
                 executor.submit(
@@ -132,9 +132,9 @@ def process_and_display_images(
                 original, result, name = future.result()
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.image(original, caption="Original")
+                    st.image(original, caption="Asli")
                 with col2:
-                    st.image(result, caption="Result")
+                    st.image(result, caption="Hasil")
                 download_result(result, name)
 
 
@@ -200,7 +200,7 @@ def img_to_bytes(img):
 def download_result(image, name):
     """Allows the user to download the result image."""
     st.download_button(
-        label="Download Result",
+        label="Unduh Hasil",
         data=img_to_bytes(image),
         file_name=f"{Path(name).stem}_nobg.png",
         mime="image/png",
