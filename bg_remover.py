@@ -6,6 +6,7 @@ from PIL import Image, ImageEnhance, ImageDraw
 from rembg import remove
 import uuid
 import concurrent.futures
+import platform
 
 MAX_FILES = 5
 ALLOWED_TYPES = ["png", "jpg", "jpeg"]
@@ -209,7 +210,13 @@ def apply_background_color(image, background_color):
 def add_watermark(image, text, position):
     """Adds watermark text to the image."""
     draw = ImageDraw.Draw(image)
-    font = st.image_config.font  # Get Streamlit's default font
+    font_size = 40  # Font size for the watermark text
+    if platform.system() == "Windows":
+        font = ImageFont.load_default()
+    else:
+        # On Unix-like systems, Arial is usually available
+        font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+        font = ImageFont.truetype(font_path, font_size)
     text_width, text_height = draw.textsize(text, font=font)
     margin = 10  # Margin from image edges
     if position == "Kiri Bawah":
