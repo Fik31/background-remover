@@ -15,8 +15,6 @@ DEFAULT_QUALITY = 95
 DEFAULT_SIZE_RATIO = (4, 3)  # Default size ratio (width:height)
 
 
-
-
 def setup_page():
     """Sets up the Streamlit page configuration."""
     st.set_page_config(page_title="Background Remover", page_icon="✂️")
@@ -211,8 +209,7 @@ def apply_background_color(image, background_color):
 def add_watermark(image, text, position):
     """Adds watermark text to the image."""
     draw = ImageDraw.Draw(image)
-    font = ImageFont.load_default()  # You can adjust the font and size here
-    text_width, text_height = draw.textsize(text, font)
+    text_width, text_height = draw.textsize(text)
     margin = 10  # Margin from image edges
     if position == "Kiri Bawah":
         x = margin
@@ -220,7 +217,7 @@ def add_watermark(image, text, position):
     else:  # Kanan Bawah
         x = image.width - text_width - margin
         y = image.height - text_height - margin
-    draw.text((x, y), text, font=font, fill=(255, 255, 255, 128))  # Adjust fill color and opacity
+    draw.text((x, y), text, fill=(255, 255, 255, 128))  # Adjust fill color and opacity
     return image
 
 
