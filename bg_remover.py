@@ -83,11 +83,6 @@ def display_ui():
         index=0,  # Indeks default
     )
 
-    watermark_text = st.sidebar.text_input("Teks Watermark", "Your Watermark Here")
-    watermark_position = st.sidebar.radio(
-        "Posisi Watermark", ("Kiri Bawah", "Kanan Bawah")
-    )
-
     display_footer()
     return (
         uploaded_files,
@@ -97,8 +92,6 @@ def display_ui():
         enhancement,
         quality,
         size_ratio,
-        watermark_text,
-        watermark_position,
     )
 
 
@@ -118,8 +111,6 @@ def process_and_display_images(
     enhancement,
     quality,
     size_ratio,
-    watermark_text,
-    watermark_position,
 ):
     """Processes the uploaded files and displays the original and result images."""
     if not uploaded_files:
@@ -145,8 +136,6 @@ def process_and_display_images(
                     enhancement,
                     quality,
                     size_ratio,
-                    watermark_text,
-                    watermark_position,
                 ): file
                 for file in uploaded_files
             }
@@ -168,8 +157,6 @@ def process_image(
     enhancement,
     quality,
     size_ratio,
-    watermark_text,
-    watermark_position,
 ):
     """Processes a single image."""
     original_image = Image.open(file).convert("RGBA")
@@ -182,7 +169,6 @@ def process_image(
     )  # Resize to specified size ratio
     if add_background_color:
         result_image = apply_background_color(result_image, background_color)
-    result_image = add_watermark(result_image, watermark_text, watermark_position)
     return original_image, result_image, file.name
 
 
@@ -206,35 +192,6 @@ def apply_background_color(image, background_color):
     background = Image.new("RGBA", image.size, background_color)
     composite_image = Image.alpha_composite(background, image)
     return composite_image
-
-
-def add_watermark(image, text, position):
-    """Adds watermark text to the image."""
-    draw = ImageDraw.Draw(image)
-    
-    # Load Streamlit configuration from TOML file
-    with open("streamlit_config.toml", "r") as f:
-        config = toml.load(f)
-    
-    font_family = config["theme"].get("font", "sans-serif")
-    
-    font_size = 40  # Font size for the watermark text
-    
-    # Create font object using the specified font family
-    font = ImageFont.truetype(font_family, font_size)
-    
-    text_width, text_height = draw.textsize(text, font=font)
-    margin = 10  # Margin from image edges
-    
-    if position == "Kiri Bawah":
-        x = margin
-        y = image.height - text_height - margin
-    else:  # Kanan Bawah
-        x = image.width - text_width - margin
-        y = image.height - text_height - margin
-    
-    draw.text((x, y), text, fill=(255, 255, 255, 128), font=font)  # Adjust fill color and opacity
-    return image
 
 
 def calculate_new_size(width, height, size_ratio):
@@ -272,8 +229,6 @@ def main():
         enhancement,
         quality,
         size_ratio,
-        watermark_text,
-        watermark_position,
     ) = display_ui()
     process_and_display_images(
         uploaded_files,
@@ -283,11 +238,8 @@ def main():
         enhancement,
         quality,
         size_ratio,
-        watermark_text,
-        watermark_position,
     )
 
 
 if __name__ == "__main__":
     main()
-
