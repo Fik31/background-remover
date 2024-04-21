@@ -2,13 +2,15 @@ import io
 import zipfile
 from pathlib import Path
 import streamlit as st
-from PIL import Image
+from PIL import Image, ImageFilter
 from rembg import remove
 import uuid
 import concurrent.futures
 
 MAX_FILES = 5
 ALLOWED_TYPES = ["png", "jpg", "jpeg"]
+SHARPENING_FACTOR = 2.0  # Adjust as needed
+IMAGE_QUALITY = 95  # Adjust as needed
 
 
 def setup_page():
@@ -49,7 +51,7 @@ def display_ui():
 def display_footer():
     """Displays a custom footer."""
     footer = """<div style="position: fixed; bottom: 0; left: 20px;">
-                <p>Developed with ❤ by <a href="https://github.com/balewgize" target="_blank">@balewgize</a></p>
+                <p>Developed by 15.4B.07</p>
                 </div>"""
     st.sidebar.markdown(footer, unsafe_allow_html=True)
 
@@ -84,6 +86,7 @@ def process_image(file):
     """Processes a single image."""
     original_image = Image.open(file).convert("RGBA")
     result_image = remove_background(file.getvalue())
+    result_image = result_image.filter(ImageFilter.SHARPEN)  # Apply sharpening
     return original_image, result_image, file.name
 
 
@@ -96,7 +99,7 @@ def remove_background(image_bytes):
 def img_to_bytes(img):
     """Converts an Image object to bytes."""
     buf = io.BytesIO()
-    img.save(buf, format="PNG")
+    img.save(buf, format="PNG", quality=IMAGE_QUALITY)
     return buf.getvalue()
 
 
