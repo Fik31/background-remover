@@ -98,7 +98,7 @@ def display_ui():
 def display_footer():
     """Displays a custom footer."""
     footer = """<div style="position: fixed; bottom: 0; left: 20px;">
-                <p>Developed by 15.4B.07</p>
+                <p>Developed by INFORMATIKA</p>
                 </div>"""
     st.sidebar.markdown(footer, unsafe_allow_html=True)
 
