@@ -42,11 +42,16 @@ def display_ui():
     st.sidebar.markdown("## Penghapus Latar Belakang Gambar")
 
     uploaded_files = st.sidebar.file_uploader(
-        "Pilih gambar",
+        "Pilih gambar (Maksimal 5 file)",
         type=ALLOWED_TYPES,
         accept_multiple_files=True,
         key=st.session_state.get("uploader_key", "file_uploader"),
     )
+
+    if uploaded_files and len(uploaded_files) > MAX_FILES:
+        st.sidebar.warning(f"Maksimal {MAX_FILES} gambar yang akan diproses.")
+
+    st.sidebar.markdown("**Catatan:** Tipe file yang diperbolehkan: PNG, JPG, dan JPEG.")
 
     add_background_color = st.sidebar.checkbox("Tambahkan Warna Latar Belakang", value=True)
     background_color = None
@@ -69,21 +74,24 @@ def display_ui():
 
     change_size_ratio = st.sidebar.checkbox("Ubah Rasio Ukuran", value=False)
 
+    size_ratio_options = [
+        (4, 3, "4:3 (Landscape)"),
+        (16, 9, "16:9 (Landscape)"),
+        (3, 2, "3:2 (Landscape)"),
+        (2, 3, "2:3 (Potrait)"),
+        (3, 4, "3:4 (Potrait)"),
+        (9, 16, "9:16 (Potrait)"),
+        (2, 1, "2:1 (Landscape)"),
+        (1, 2, "1:2 (Potrait)"),
+        (1, 1, "1:1 (Square)"),
+    ]
+
     size_ratio = DEFAULT_SIZE_RATIO
     if change_size_ratio:
         size_ratio = st.sidebar.selectbox(
             "Rasio Ukuran",
-            options=[
-                (4, 3),
-                (16, 9),
-                (3, 2),
-                (2, 3),
-                (3, 4),
-                (9, 16),
-                (2, 1),
-                (1, 2),
-            ],  # Rasio umum ukuran
-            format_func=lambda ratio: f"{ratio[0]}:{ratio[1]}",
+            options=size_ratio_options,
+            format_func=lambda ratio: ratio[2],
             index=0,  # Indeks default
         )
 
@@ -207,7 +215,7 @@ def calculate_new_size(width, height, size_ratio):
     if size_ratio == "original":
         return width, height
     else:
-        ratio_width, ratio_height = size_ratio
+        ratio_width, ratio_height, _ = size_ratio
         new_width = int((height / ratio_height) * ratio_width)
         return new_width, height
 
