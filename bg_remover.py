@@ -67,21 +67,25 @@ def display_ui():
         "Kualitas Gambar (%)", min_value=1, max_value=100, value=DEFAULT_QUALITY
     )
 
-    size_ratio = st.sidebar.selectbox(
-        "Rasio Ukuran",
-        options=[
-            (4, 3),
-            (16, 9),
-            (3, 2),
-            (2, 3),
-            (3, 4),
-            (9, 16),
-            (2, 1),
-            (1, 2),
-        ],  # Rasio umum ukuran
-        format_func=lambda ratio: f"{ratio[0]}:{ratio[1]}",
-        index=0,  # Indeks default
-    )
+    change_size_ratio = st.sidebar.checkbox("Ubah Rasio Ukuran", value=False)
+
+    size_ratio = DEFAULT_SIZE_RATIO
+    if change_size_ratio:
+        size_ratio = st.sidebar.selectbox(
+            "Rasio Ukuran",
+            options=[
+                (4, 3),
+                (16, 9),
+                (3, 2),
+                (2, 3),
+                (3, 4),
+                (9, 16),
+                (2, 1),
+                (1, 2),
+            ],  # Rasio umum ukuran
+            format_func=lambda ratio: f"{ratio[0]}:{ratio[1]}",
+            index=0,  # Indeks default
+        )
 
     display_footer()
     return (
@@ -98,7 +102,7 @@ def display_ui():
 def display_footer():
     """Displays a custom footer."""
     footer = """<div style="position: fixed; bottom: 0; left: 20px;">
-                <p>Developed by INFORMATIKA</p>
+                <p>Developed by 15.4B.07 Informatika</p>
                 </div>"""
     st.sidebar.markdown(footer, unsafe_allow_html=True)
 
@@ -163,8 +167,12 @@ def process_image(
     original_width, original_height = original_image.size
     result_image = remove_background(file.getvalue())
     result_image = enhance_image(result_image, brightness, enhancement)
+    if size_ratio == "original":
+        new_size = (original_width, original_height)
+    else:
+        new_size = calculate_new_size(original_width, original_height, size_ratio)
     result_image = result_image.resize(
-        calculate_new_size(original_width, original_height, size_ratio),
+        new_size,
         Image.LANCZOS,
     )  # Resize to specified size ratio
     if add_background_color:
@@ -196,9 +204,12 @@ def apply_background_color(image, background_color):
 
 def calculate_new_size(width, height, size_ratio):
     """Calculates the new size based on the specified size ratio."""
-    ratio_width, ratio_height = size_ratio
-    new_width = int((height / ratio_height) * ratio_width)
-    return new_width, height
+    if size_ratio == "original":
+        return width, height
+    else:
+        ratio_width, ratio_height = size_ratio
+        new_width = int((height / ratio_height) * ratio_width)
+        return new_width, height
 
 
 def img_to_bytes(img):
