@@ -215,9 +215,13 @@ def calculate_new_size(width, height, size_ratio):
     if size_ratio == "original":
         return width, height
     else:
-        ratio_width, ratio_height, _ = size_ratio
+        if len(size_ratio) == 3:  # Jika rasio memiliki tiga elemen
+            ratio_width, ratio_height, _ = size_ratio
+        else:  # Jika rasio hanya memiliki dua elemen
+            ratio_width, ratio_height = size_ratio
         new_width = int((height / ratio_height) * ratio_width)
         return new_width, height
+
 
 
 def img_to_bytes(img):
