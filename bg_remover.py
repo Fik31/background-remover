@@ -51,7 +51,7 @@ def display_ui():
     if uploaded_files and len(uploaded_files) > MAX_FILES:
         st.sidebar.warning(f"Maksimal {MAX_FILES} gambar yang akan diproses.")
 
-    st.sidebar.markdown("**Catatan:** Tipe file yang diperbolehkan: PNG, JPG, dan JPEG.")
+    # st.sidebar.markdown("**Catatan:** Tipe file yang diperbolehkan: PNG, JPG, dan JPEG.")
 
     add_background_color = st.sidebar.checkbox("Tambahkan Warna Latar Belakang", value=True)
     background_color = None
