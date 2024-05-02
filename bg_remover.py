@@ -175,21 +175,23 @@ def process_image(
     original_width, original_height = original_image.size
     result_image = remove_background(file.getvalue())
     result_image = enhance_image(result_image, brightness, enhancement)
-    new_size = (original_width, original_height)  # Default size is original size
-    if size_ratio != "original":
-        if len(size_ratio) == 3:  # Jika rasio memiliki tiga elemen
-            ratio_width, ratio_height, _ = size_ratio
-        else:  # Jika rasio hanya memiliki dua elemen
-            ratio_width, ratio_height = size_ratio
-        new_width = int((original_height / ratio_height) * ratio_width)
-        new_size = (new_width, original_height)
-    result_image = result_image.resize(
-        new_size,
-        Image.LANCZOS,
-    )  # Resize to specified size ratio
+    if size_ratio == "original":
+        new_size = (original_width, original_height)
+    else:
+        new_size = None  # Default new size is None (no resizing)
+        if size_ratio != DEFAULT_SIZE_RATIO:  # If size ratio is not default
+            if len(size_ratio) == 3:  # If ratio has three elements
+                ratio_width, ratio_height, _ = size_ratio
+            else:  # If ratio has two elements
+                ratio_width, ratio_height = size_ratio
+            new_width = int((original_height / ratio_height) * ratio_width)
+            new_size = (new_width, original_height)
+    if new_size is not None:
+        result_image = result_image.resize(new_size, Image.LANCZOS)  # Resize image
     if add_background_color:
         result_image = apply_background_color(result_image, background_color)
     return original_image, result_image, file.name
+
 
 
 def remove_background(image_bytes):
