@@ -192,7 +192,6 @@ def process_image(
     return original_image, result_image, file.name
 
 
-
 def remove_background(image_bytes):
     """Removes the background from an image."""
     result = remove(image_bytes)
@@ -213,20 +212,6 @@ def apply_background_color(image, background_color):
     background = Image.new("RGBA", image.size, background_color)
     composite_image = Image.alpha_composite(background, image)
     return composite_image
-
-
-def calculate_new_size(width, height, size_ratio):
-    """Calculates the new size based on the specified size ratio."""
-    if size_ratio == "original":
-        return width, height
-    else:
-        if len(size_ratio) == 3:  # Jika rasio memiliki tiga elemen
-            ratio_width, ratio_height, _ = size_ratio
-        else:  # Jika rasio hanya memiliki dua elemen
-            ratio_width, ratio_height = size_ratio
-        new_width = int((height / ratio_height) * ratio_width)
-        return new_width, height
-
 
 
 def img_to_bytes(img):
