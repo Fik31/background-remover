@@ -1,2 +1,5 @@
-# background-remover
-This is  a simple usage background remover using python for a task in college
+# Background Remover
+
+5th Semester University Project
+
+_Web Programming 3 - UBSI_
